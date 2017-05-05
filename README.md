@@ -8,6 +8,8 @@ Requirement:
 4) Install sklearn and matplotlib python machine learning library.
 
 The data_profiling.py python script profiles the data in the following format:
+
+```json
 {
 	"field1.field2...": {
 		"num_records": "the number of times the field occurs in the dataset",
@@ -56,7 +58,7 @@ The data_profiling.py python script profiles the data in the following format:
 		}
 	}
 }
-
+```
 The following steps are required to run data_profiling.py:
 1) python data_profiling.py <file_to_be_profiled> <output_file> <top_k>
 
