@@ -61,4 +61,9 @@ The data_profiling.py python script profiles the data in the following format:
 ```
 The following steps are required to run data_profiling.py:
 1) python data_profiling.py <file_to_be_profiled> <output_file> <top_k>
+Example: python data_profiling.py 'university.json' 'university_profile1.json' 20
 
+The dbpedia_sparql downloads the data from the dbpedia, formats it and uses the profiler for data profiling.
+The following steps are required to run dbpedia_sparql.py:
+1) python dbpedia_sparql.py <className> <offset> <limit> <download_file_name> <output_file> <top_k>
+Example: python dbpedia_sparql.py 'dbo:University' 1000 1000 'university.json' 'university_profile1.json' 20
