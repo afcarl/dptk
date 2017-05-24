@@ -1,18 +1,17 @@
 import json
+import os
 import random
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.svm import SVC
 from sklearn.metrics import precision_recall_fscore_support
 from sklearn.metrics import precision_recall_curve
-
+import compute_feature
+import data_profiling
 # from sklearn.metrics import accuracy_score
 
 json1_data = None
 json2_data = None
-
-
-# import compute_feature
 
 def read_dataprofilers(file1, file2):
     json1_file = open(file1).read()
@@ -29,18 +28,23 @@ def isPairOfFieldNumeric(field1, field2):
     return False
 
 
-def read_trainingdata(matchfile, nonmatchfile):
+def read_trainingdata(matchfile, nonmatchfile=None):
     with open(matchfile, "rb") as f:
         data1 = f.read().split('\n')
 
-    with open(nonmatchfile, "rb") as f:
-        data2 = f.read().split('\n')
+    if nonmatchfile is None:
+        data2 = []
+    else:
+        with open(nonmatchfile, "rb") as f:
+            data2 = f.read().split('\n')
 
     data = data1 + data2
     random.shuffle(data)
     d1 = []
     d2 = []
     for d in data:
+        if d is None or d is "" or d is '\n':
+            continue
         split_data = d.split("\t")
         if isPairOfFieldNumeric(split_data[0], split_data[1]):
             d1.append(d)
@@ -165,15 +169,15 @@ def feature_diff_numeric_stat_mode(field1, field2):
 
 def get_features(field1, field2, nummeric_Feature=False):
     feature = []
-    feature.append(feature_lencommonpunc(field1, field2))
+    #feature.append(feature_lencommonpunc(field1, field2))
     # feature.append(feature_lencommonvalues(field1,field2))
     feature.append(feature_lencommontokens(field1, field2))
 
     #feature.append(feature_lencommondatatypes(field1, field2))
     feature.append(feature_diff_char_avg(field1, field2))
-    # feature.append(feature_diff_char_std(field1,field2))
+    #feature.append(feature_diff_char_std(field1,field2))
     feature.append(feature_diff_token_avg(field1, field2))
-    # feature.append(feature_diff_token_std(field1,field2))
+    #feature.append(feature_diff_token_std(field1,field2))
 
     if nummeric_Feature:
         feature.append(feature_diff_numeric_stat_avg(field1, field2))
@@ -208,6 +212,7 @@ def feature_generation(data, numericFeatures=False):
 
     return feature_arr, output_arr
 
+# not used method
 def plot_graph_multiple(feature_arr, output_arr, xlabel='features', ylabel='label match', title='classfication dbpedia',
                   filename='test.png'):
     for i in range(len(feature_arr)):
@@ -218,9 +223,11 @@ def plot_graph_multiple(feature_arr, output_arr, xlabel='features', ylabel='labe
     plt.grid(True)
     plt.savefig(filename)
     plt.show()
+
+
 def plot_graph(feature_arr, output_arr, xlabel='features', ylabel='label match', title='classfication dbpedia',
                   filename='test.png'):
-    plt.plot(feature_arr, output_arr,'ro')
+    plt.plot(feature_arr, output_arr)
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.title(title)
@@ -228,7 +235,7 @@ def plot_graph(feature_arr, output_arr, xlabel='features', ylabel='label match',
     plt.savefig(filename)
     plt.show()
 
-
+# not used method
 def accuracy(predicted, testinglabels):
     length = len(predicted)
 
@@ -317,6 +324,8 @@ def precision_recall_k(filename, clf, clf_num, className):
     match_point_k = []
     #count = len(data1) + 1
     for d in data1:
+        if d is None or d is "":
+            continue
         #count -= 1
         #if count<0:
         #    print "I am breaking here"
@@ -327,6 +336,10 @@ def precision_recall_k(filename, clf, clf_num, className):
         else:
             d2.append(split_data[0])
 
+    horizontal_len = max(len(d1),len(d2))
+    for i in range(horizontal_len):
+        precision_k.append(0.0)
+        recall_k.append(0.0)
     print len(d1)
     print len(d2)
     matrix = []
@@ -396,9 +409,15 @@ def precision_recall_k(filename, clf, clf_num, className):
                 m[i][4] = 1.0
             else:
                 m[i][4] = 0.0
+            precision_k[i] = precision_k[i] + m[i][3]
+            recall_k[i] = recall_k[i] + m[i][4]
+
         match_point_k.append(match_index+1)
-        precision_k.append(1.0/(match_index+1))
-        recall_k.append(m[match_index][4])
+    for i in range(len(precision_k)):
+        precision_k[i] = precision_k[i]/len(matrix)
+        recall_k[i] = recall_k[i]/len(matrix)
+        #precision_k.append(1.0/(match_index+1))
+        #srecall_k.append(m[match_index][4])
 
     print "printing matrices"
     #for i in range(len(match_point_k)):
@@ -446,9 +465,9 @@ def predict(dataProfiler1, dataProfiler2, labelledData1, labelledData2, classNam
     #accuracy1(predicted_num, output_arr1, className + " numeric")
 
 
-if __name__ == '__main__':
-    read_dataprofilers('data_stats1.json', 'data_stats2.json')
-    data, data1 = read_trainingdata("pairs.txt", "non_pairs.txt")
+def get_classifiers(profiler1='data_stats1.json', profiler2='data_stats2.json', pair="pairs.txt", non_pair="non_pairs.txt"):
+    read_dataprofilers(profiler1, profiler2)
+    data, data1 = read_trainingdata(pair, non_pair)
 
     # read_dataprofilers('university_profile.json', 'university_profile1.json')
     # data, data1 = read_trainingdata("university_pairs.txt", "university_non_pairs.txt")
@@ -488,6 +507,43 @@ if __name__ == '__main__':
     # feature_label(feature_arr,output_arr)
     clf = generate_classifier(training_feature, trainging_label)
     clf_numeric = generate_classifier(training_feature1, trainging_label1)
+    return clf, clf_numeric
+
+
+def predictPairs(ds1, ds2, clf=None, clf_num=None):
+    fileName1, file_extension = os.path.splitext(ds1)
+    fileName2, file_extension = os.path.splitext(ds2)
+
+    print fileName1
+    print fileName2
+
+    #data_profiling.profile_data(ds1,fileName1+"_profile"+".json", 20)
+    #data_profiling.profile_data(ds2,fileName2+"_profile"+".json", 20)
+    read_dataprofilers(ds1, ds2)
+    compute_feature.createCrossPairs(ds1, ds2, fileName1+"_"+fileName2+"_crossPairs.txt")
+
+    data, data1 = read_trainingdata(fileName1+"_"+fileName2+"_crossPairs.txt")
+
+    feature_arr, output_arr = feature_generation(data, False)
+    predicted = clf.predict_proba(feature_arr)
+
+
+    feature_arr1, output_arr1 = feature_generation(data1, True)
+    predicted_num = clf_num.predict_proba(feature_arr1)
+
+
+    for i in range(len(predicted)):
+        if predicted[i][1] >= predicted[i][0]:
+            print data[i]
+    for i in range(len(predicted_num)):
+        if predicted_num[i][1] >= predicted_num[i][0]:
+            print data1[i]
+
+
+if __name__ == '__main__':
+    clf, clf_numeric = get_classifiers('data_stats1.json', 'data_stats2.json', 'pairs.txt', 'non_pairs.txt')
+    #clf,clf_numeric = get_features('university_profile.json', 'university_profile1.json',"university_pairs.txt", "university_non_pairs.txt")
+    #clf,clf_numeric = get_features('Organisation_profile5k.json','Organisation_profile5k1.json', 'pairs1.txt', 'non_pairs1.txt')
 
     # predict Person
     # predicted = clf.predict_proba(testingfeature)
@@ -499,8 +555,10 @@ if __name__ == '__main__':
     predict('Organisation_profile5k.json', 'Organisation_profile5k1.json', "pairs1.txt", "non_pairs1.txt",
             "Organisation", clf, clf_numeric)
     predict('university_profile.json','university_profile1.json','university_pairs.txt','university_non_pairs.txt',"University",clf,clf_numeric)
-    predict('data_stats1.json', 'data_stats2.json',"pairs.txt", "non_pairs.txt","Person",clf,clf_numeric)
+    predict('data_stats1.json', 'data_stats2.json',"pairs.txt", "non_pairs.txt","Person", clf, clf_numeric)
 
+
+    #predictPairs('Organisation_profile5k.json','Organisation_profile5k1.json',clf,clf_numeric)
     '''
     read_dataprofilers('Organisation_profile5k.json','Organisation_profile5k1.json')
     data = read_trainingdata("pairs1.txt", "non_pairs1.txt")

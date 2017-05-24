@@ -5,7 +5,6 @@ from collections import OrderedDict
 import numpy as np
 import re
 from langdetect import detect
-from nltk.corpus import stopwords
 from dateutil.parser import parse
 import math
 import sys
@@ -148,7 +147,7 @@ def convertAlphatoNum(input):
     non_decimal = re.compile(r'[^\d.\s\w]+')
     return non_decimal.sub(' ', input)
 
-def profile_data(inputFile):
+def profile_data_wrapper(inputFile):
     for k, v in item_generator(readjson(inputFile)):
         try:
             v = v.lower()
@@ -281,9 +280,9 @@ def profile_data(inputFile):
                     field_punctuation_count[k][ch] = 1
 
 
-def profile_data(inputFile, outputFile, top_frequent):
+def profile_data(inputFile, outputFile, top_frequent=20):
     topk = top_frequent
-    profile_data(inputFile)
+    profile_data_wrapper(inputFile)
     res = dict()
     for field in fields:
         curr_rec = {}
@@ -438,6 +437,6 @@ def profile_data(inputFile, outputFile, top_frequent):
 
 
 if __name__ == '__main__':
-    profile_data(sys.argv[1],sys.argv[2],int(sys.argv[3]))
-    #profile_data('Organisation5k.json','Organisation_profile5k.json', 20)
+    #profile_data(sys.argv[1],sys.argv[2],int(sys.argv[3]))
+    profile_data('aac-objects.json','aac-objects_profile.json', 20)
     print("--- %s seconds ---" % (time.time() - start_time))
