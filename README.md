@@ -7,6 +7,8 @@ Requirement:
 3) Install SPARQLWrapper python library.
 4) Install sklearn and matplotlib python machine learning library.
 
+The downloaded_Data and graphs have the example of downloaded dbpedia data, profiled data, generated match/non-match pairs and graphs for evaluation.
+
 # Data Profiling
 The data_profiling.py python script profiles the data in the following format:
 
