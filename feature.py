@@ -292,7 +292,7 @@ def accuracy1(predicted, testinglabels, title=""):
     print "precision, recall, thresholds"
     print precision, recall, thresholds
     plot_graph(recall, precision, "recall", "precision", "recall-precision",
-                  "recall-precision_mod_" + title + "_pos.png")
+                  "recall-precision_" + title + "_pos.png")
     '''
     print precision
     print recall

@@ -118,8 +118,8 @@ def dbpedia_profiled_data(className, offset, limit, dbpediaData, dbpediaProfiled
     data_profiling.profile_data(dbpediaData,dbpediaProfiledData,int(top_frequent))
 
 if __name__ == '__main__':
-    #dbpedia_profiled_data(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6])
-    listOfObjects = getListOfObjs('dbo:University',3382, 1618)
-    writeToJson('university.json',listOfObjects)
-    data_profiling.profile_data('university1.json','university_profile1.json',20)
+    dbpedia_profiled_data(sys.argv[1],sys.argv[2],sys.argv[3],sys.argv[4],sys.argv[5],sys.argv[6])
+    #listOfObjects = getListOfObjs('dbo:University',3382, 1618)
+    #writeToJson('university.json',listOfObjects)
+    #data_profiling.profile_data('university1.json','university_profile1.json',20)
 

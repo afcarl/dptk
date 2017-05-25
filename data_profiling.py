@@ -4,10 +4,11 @@ from collections import defaultdict
 from collections import OrderedDict
 import numpy as np
 import re
+
+import sys
 from langdetect import detect
 from dateutil.parser import parse
 import math
-import sys
 
 import operator
 import time
@@ -279,11 +280,12 @@ def profile_data_wrapper(inputFile):
                 else:
                     field_punctuation_count[k][ch] = 1
 
-
 def profile_data(inputFile, outputFile, top_frequent=20):
     topk = top_frequent
+    # process input file into required data structure.
     profile_data_wrapper(inputFile)
     res = dict()
+    # processing the datastruture according to the reqd output json structure.
     for field in fields:
         curr_rec = {}
         try:
@@ -398,7 +400,7 @@ def profile_data(inputFile, outputFile, top_frequent=20):
 
             if field in field_value_numeric:
                 curr_rec["length"]["numeric_data_stats"] = dict()
-                print "numeric field" + field
+                #print "numeric field" + field
                 curr_rec["length"]["numeric_data_stats"]["min"] = np.min(field_value_numeric[field])
                 curr_rec["length"]["numeric_data_stats"]["max"] = np.max(field_value_numeric[field])
                 curr_rec["length"]["numeric_data_stats"]["average"] = np.mean(field_value_numeric[field])
@@ -413,9 +415,9 @@ def profile_data(inputFile, outputFile, top_frequent=20):
                 try:
                     curr_rec["length"]["numeric_data_stats"]["mode"] = np.argmax(np.bincount(field_value_numeric[field]))
                 except:
-                    print "Improper mode"
-                    print field
-                    print curr_rec
+                    #print "Improper mode"
+                    #print field
+                    #print curr_rec
                     pass
 
             if field in field_language:
@@ -437,6 +439,6 @@ def profile_data(inputFile, outputFile, top_frequent=20):
 
 
 if __name__ == '__main__':
-    #profile_data(sys.argv[1],sys.argv[2],int(sys.argv[3]))
-    profile_data('aac-objects.json','aac-objects_profile.json', 20)
+    profile_data(sys.argv[1],sys.argv[2],int(sys.argv[3]))
+    #profile_data('ccma_objects.json','ccma_objects_profile.json', 20)
     print("--- %s seconds ---" % (time.time() - start_time))
